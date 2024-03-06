@@ -1,0 +1,8 @@
+env
+.env
+.idea
+node_modules
+package-lock.json
+package.json
+*pycache*
+credentials.json
