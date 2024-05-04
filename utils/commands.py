@@ -8,10 +8,25 @@ async def set_commands(bot: Bot):
             command="start", description="Начать"
         ),
         BotCommand(
-            command="read", description="Помощь"
+            command="help", description="инструкции"
+        ),
+        BotCommand(
+            command="view", description="посмотреть"
+        ),
+        BotCommand(
+            command="write", description="записать"
+        ),
+        BotCommand(
+            command="create", description="создать"
+        ),
+        BotCommand(
+            command="delete", description="удалить"
         ),
         BotCommand(
           command="cancel", description="Отменить"
         ),
+        BotCommand(
+            command="message", description="Сообщение"
+        )
     ]
     await bot.set_my_commands(commands, scope=BotCommandScopeDefault())
