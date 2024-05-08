@@ -26,15 +26,16 @@ class ViewRow(CallbackData, prefix='view_row'):
     view_row: str
 
 class Write(CallbackData, prefix='write'):
-    write: str
     nam: str
-    all_write: str
 
-class WriteObject(CallbackData, prefix='write_obj'):
-    write_obj: str
+class WriteWorksheet(CallbackData, prefix='write_ws'):
+    write_ws: str
 
-class WritePrice(CallbackData, prefix='write_price'):
-    write_price: str
+class WriteData(CallbackData, prefix='write_data'):
+    write_data: str
+
+class WriteUpdate(CallbackData, prefix='write_'):
+    write_: str
 
 class WritePrice2(CallbackData, prefix='write_price'):
     write_price2: str

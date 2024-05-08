@@ -62,6 +62,12 @@ def get_ws_column(ws, sheet_id):
     first_column_data = [row[0] for row in all_values[1:]]
     return first_column_data
 
+def get_sheets_names(sheet_id):
+    sheet = gc.open_by_key(sheet_id)
+    sheet_names = sheet.worksheets()
+    sheet_names = [sheet.title for sheet in sheet_names]
+    return sheet_names
+
 def get_ws_row(ws, sheet_id):
     sheet = gc.open_by_key(sheet_id)
     worksheet = sheet.worksheet(ws)

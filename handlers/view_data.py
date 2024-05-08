@@ -10,7 +10,7 @@ from utils.middleware import sheet_id_middleware
 
 
 router_view_data = Router()
-router_view_data.callback_query.middleware(sheet_id_middleware)
+# router_view_data.callback_query.middleware(sheet_id_middleware)
 
 @flags.flag("long_operation")
 @router_view_data.callback_query(Select.filter())

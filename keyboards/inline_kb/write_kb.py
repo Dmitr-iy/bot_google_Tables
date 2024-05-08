@@ -1,48 +1,76 @@
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from utils.callbackdata import Write
-from utils.fun_gspread import get_spreadsheet_names
+from utils.callbackdata import Write, WriteWorksheet, WriteData, WriteUpdate
+from utils.fun_gspread import get_spreadsheet_names, get_sheets_names, get_ws_row
 
 
 def write_kb():
     builder = InlineKeyboardBuilder()
 
     names = get_spreadsheet_names()
+    print("Writing", names)
     for name in names:
         builder.button(
             text=name,
-            callback_data=Write(write="write", nam=name, all_write="").pack()
+            callback_data=Write(nam=name).pack()
         )
+
+    builder.adjust(2)
+    return builder.as_markup()
+
+def write_name_ws(sheet_id):
+    builder = InlineKeyboardBuilder()
+    worksheet_names = get_sheets_names(sheet_id)
+    print('working ws kb', worksheet_names)
+    for name in worksheet_names:
+        builder.button(
+            text=name,
+            callback_data=WriteWorksheet(write_ws=name).pack()
+        )
+
+    builder.button(
+        text="назад",
+        callback_data=WriteWorksheet(write_ws='back').pack()
+    )
 
     builder.adjust(3)
     return builder.as_markup()
 
-    # builder.button(
-    #     text="объекты",
-    #     callback_data=Write(write="object", nam="", all_write="").pack()
-    # )
-    #
-    # builder.button(
-    #     text="сотрудники",
-    #     callback_data=Write(write="workers", nam="", all_write="").pack()
-    # )
-    #
-    # builder.button(
-    #     text="покупки",
-    #     callback_data=Write(write="buy", nam="", all_write="").pack()
-    # )
-    #
-    # builder.button(
-    #     text="расходники",
-    #     callback_data=Write(write="consumables", nam="", all_write="").pack()
-    # )
-    #
-    # builder.button(
-    #     text="инструменты",
-    #     callback_data=Write(write="tools", nam="", all_write="").pack()
-    # )
-    #
-    # builder.button(
-    #     text="бюджет",
-    #     callback_data=Write(write="budget", nam="", all_write="").pack()
-    # )
+def write_ws_data(ws, sheet_id):
+    builder = InlineKeyboardBuilder()
+    print("sh_id", sheet_id)
+    write_view_row1 = get_ws_row(ws, sheet_id)
+    print("write_view_row1", write_view_row1)
+    for row in write_view_row1:
+        builder.button(
+            text=row,
+            callback_data=WriteData(write_data=row).pack()
+        )
 
+    builder.button(
+        text="все строки",
+        callback_data=WriteData(write_data="all").pack()
+    )
+
+    builder.button(
+        text="назад",
+        callback_data=WriteData(write_data='back').pack()
+    )
+    builder.adjust(2, 2)
+    return builder.as_markup()
+
+def write_yes_no():
+    builder = InlineKeyboardBuilder()
+
+    builder.button(
+        text="да, изменить",
+        callback_data=WriteUpdate(write_="yes").pack()
+    )
+
+    builder.button(
+        text="нет, не менять",
+        callback_data=WriteUpdate(write_="not").pack()
+    )
+
+    builder.adjust(1)
+
+    return builder.as_markup()

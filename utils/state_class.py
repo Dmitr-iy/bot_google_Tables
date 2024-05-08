@@ -68,19 +68,14 @@ class StateWriteSalary(StatesGroup):
     salary_minus = State()
     salary = State()
 
+class StateWriteData(StatesGroup):
+    cell_1 = State()
+    cell_range_name_obj = State()
+    cell_range_data_cell = State()
+    cell_update = State()
 class StateWriteAll(StatesGroup):
-    name_obj_all = State()
-    date_obj = State()
-    date_obj_end = State()
-    price_all = State()
-    tax_all = State()
-    consumables_all = State()
-    repair_tools_all = State()
-    car_all = State()
-    petrol_all = State()
-    salary_all = State()
-    y_n_all = State()
-    all = State()
+    cell_1_all = State()
+    cell_2_all = State()
 
 class StateCreate(StatesGroup):
     name = State()
