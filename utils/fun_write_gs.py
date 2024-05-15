@@ -1,5 +1,4 @@
 import gspread
-
 from utils.fun_gspread import gc
 
 
@@ -54,6 +53,23 @@ def examination_cell(sheet_id, work_sheet, cell_data, data_):
     column_number = cell_col.col
     cell = worksheet.cell(row_number, column_number).value
     print("cell: ", cell)
-    # value = cell.()
     return cell
 
+def get_cell_row1(sheet_id, work_sheet):
+    sheet = gc.open_by_key(sheet_id)
+    worksheet = sheet.worksheet(work_sheet)
+    cell = worksheet.row_values(1)
+    row_first = [col for col in cell[1:]]
+    return row_first
+
+def write_all_datas(sheet_id, work_sheet, all_datas):
+    sheet = gc.open_by_key(sheet_id)
+    worksheet = sheet.worksheet(work_sheet)
+    all_datas = all_datas.split(",")
+    print('all_datas functions', all_datas)
+    next_empty_row = len(worksheet.get_all_values()) + 1
+    data = [cell if cell != '0' else '' for cell in all_datas]
+    print('data: ', data)
+    for i, element in enumerate(data, start=1):
+        worksheet.update_cell(next_empty_row, i, element)
+    return True

@@ -3,8 +3,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from keyboards.inline_kb.write_kb import write_name_ws, write_ws_data, write_yes_no
 from utils.callbackdata import Write, WriteWorksheet, WriteData, WriteUpdate
-from utils.fun_gspread import get_sheets_names, get_spreadsheet_id, get_ws_row, get_cell
-from utils.fun_write_gs import get_cell_data, get_col1_data, write_data_col1, write_range_data, examination_cell
+from utils.fun_gspread import get_spreadsheet_id, get_cell
+from utils.fun_write_gs import get_cell_data, get_col1_data, write_data_col1, write_range_data, examination_cell, \
+    get_cell_row1, write_all_datas
 from utils.middleware import sheet_id_middleware
 from utils.state_class import StateWriteAll, StateWriteData
 
@@ -172,5 +173,49 @@ async def write_data(message, state: FSMContext):
 
 @router_write_data.message(StateWriteAll.cell_1_all)
 async def write_all(message, state: FSMContext):
-    pass
+    all_data = message.text
+    print("all_data: ", all_data)
+    sheet_id = sheet_id_middleware.sheet_id
+    work_sheet = sheet_id_middleware.work_sheet
+    result = get_col1_data(sheet_id, work_sheet)
+    if all_data.lower() in [row.lower() for row in result]:
+        await message.answer(f"{message.from_user.full_name}\n\nВ этой колонке данные с названиями _'объектов'_ данных."
+                             f"Эти названия должны быть уникальными. \n\nТакое название уже существует."
+                             f"Введи другое название объекта, или в меню выбери команду 'Отменить'"
+                             f" для отмены действия.", parse_mode="Markdown")
+        return
+    else:
+        await state.update_data(all_data=all_data)
+        first_row = get_cell_row1(sheet_id, work_sheet)
+        print("first_row: ", first_row)
+        columns = first_row
+        result_text = ""
+        for column in columns:
+            result_text += f"*{column}*\n"
+        result_text += "\n"
+        await message.answer(f"{message.from_user.full_name}\n\n"
+                             f"Введи\n\n_{result_text}_.\n\nЗаписывай строкой, через запятую. Если запятой не будет,"
+                             f" данные будут записаны в одну ячейку\n\n"
+                             f"Если хочешь оставить поле пустым, введи 0.", parse_mode="Markdown")
+        await state.set_state(StateWriteAll.cell_2_all)
 
+@router_write_data.message(StateWriteAll.cell_2_all)
+async def write_all_data(message, state: FSMContext):
+    list_all_data = message.text
+    sheet_id = sheet_id_middleware.sheet_id
+    work_sheet = sheet_id_middleware.work_sheet
+    print("all_data: ", list_all_data)
+    await state.update_data(list_all_data=list_all_data)
+    data = await state.get_data()
+    all_data = data.get("all_data")
+    list_all_data = data.get("list_all_data")
+    all_datas = all_data + "," + list_all_data
+    print("all_datas: ", all_datas)
+    result = write_all_datas(sheet_id, work_sheet, all_datas)
+    print("result all: ", result)
+    if result:
+        await message.answer(f"{message.from_user.full_name}\n\nДанные успешно записаны.")
+        await state.clear()
+    else:
+        await message.answer(f"{message.from_user.full_name}\n\nДанные не записаны.")
+        await state.clear()
