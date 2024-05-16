@@ -83,3 +83,7 @@ class StateCreate(StatesGroup):
     sum_rows = State()
     sum_cols = State()
     yes_no_news = State()
+
+class StateWriteNew(StatesGroup):
+    col = State()
+    row = State()

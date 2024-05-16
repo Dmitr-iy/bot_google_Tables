@@ -3,8 +3,8 @@ from aiogram.fsm.context import FSMContext
 from keyboards.inline_kb.kb_create.kb_new_file import create_file_y_n
 from utils.callbackCreate import KbNewFile
 from utils.fun_gspread import create_spreadsheet, examination_name
-from utils.state_class import StateCreate
-
+from utils.middleware import sheet_id_middleware
+from utils.state_class import StateCreate, StateWriteNew
 
 router_new_table = Router()
 
@@ -24,6 +24,7 @@ async def new_table(message: types.Message, state: FSMContext):
 async def name_worksheet(message: types.Message, state: FSMContext):
     name_ws = message.text
     await state.update_data(name_ws=name_ws)
+    sheet_id_middleware.work_sheet = name_ws
     data = await state.get_data()
     name = data.get("name")
     name_worksheets = data.get("name_ws")
@@ -52,6 +53,9 @@ async def num_cols(message: types.Message, state: FSMContext):
     sum_cols = data.get("sum_cols")
     await message.answer('идет создание таблицы...', sleep=2)
     url = await (create_spreadsheet(name, name_worksheets, sum_rows, sum_cols))
+    print('url', url)
+    sheet_id_middleware.sheet_id = url
+    print('sheet_id', sheet_id_middleware.sheet_id)
     await message.answer(f"Таблица {name} создана, в нее добавлен лист {name_worksheets}\n\n"
                          f"кол-во строк в листе: {sum_rows}\n\n"
                          f"кол-во столбцов в листе: {sum_cols}\n\n"
@@ -60,17 +64,15 @@ async def num_cols(message: types.Message, state: FSMContext):
                          reply_markup=create_file_y_n())
     await state.set_state(StateCreate.yes_no_news)
 
-    @router_new_table.callback_query(KbNewFile.filter(), StateCreate.yes_no_news)
-    async def yes_no_news(call: types.CallbackQuery, callback_data: KbNewFile, state: FSMContext):
-        callbacks = callback_data.yes_no_new
-        if callbacks == "yes":
-            await call.message.answer(f"все готово, в меню выбери команду 'Записать'")
-            await state.clear()
-        else:
-            await call.message.answer(f"когда понадобится добавить данные, в меню выбери команду 'Записать'")
-            await state.clear()
-
-
-
-
-
+@router_new_table.callback_query(KbNewFile.filter(), StateCreate.yes_no_news)
+async def yes_no_news(call: types.CallbackQuery, callback_data: KbNewFile, state: FSMContext):
+    callbacks = callback_data.yes_no_new
+    if callbacks == "yes":
+        await call.message.answer(f"Сначала нужно заполнить 'шапку' таблицы.\n"
+                                  f"введи название столбцов через запятую, "
+                                  f"если название какого-то столбца не нужно - введи 0\n"
+                                  f"если не надо добавлять названия столбцов введи '-'")
+        await state.set_state(StateWriteNew.col)
+    else:
+        await call.message.answer(f"когда понадобится добавить данные, в меню выбери команду 'Записать'")
+        await state.clear()

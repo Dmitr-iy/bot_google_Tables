@@ -73,3 +73,13 @@ def write_all_datas(sheet_id, work_sheet, all_datas):
     for i, element in enumerate(data, start=1):
         worksheet.update_cell(next_empty_row, i, element)
     return True
+
+def write_new_col(sheet_id, work_sheet, data_col, data_row):
+    print('sheet_id', sheet_id)
+    sheet = gc.open_by_key(sheet_id)
+    worksheet = sheet.worksheet(work_sheet)
+    for j, cell in enumerate(data_col, start=1):
+        worksheet.update_cell(1, j, cell)
+    for i, cell in enumerate(data_row, start=1):
+        worksheet.update_cell(i, 1, cell)
+    return True

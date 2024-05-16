@@ -1,6 +1,8 @@
+import logging
+
 import gspread
 from google.oauth2.service_account import Credentials
-from gspread import Spreadsheet, Client
+from gspread import Spreadsheet, Client, WorksheetNotFound
 from utils.func_google import SERVICE_ACCOUNT_FILE, SCOPES
 from data.config import config_settings
 
@@ -28,13 +30,13 @@ async def examination_name(name):
 
 async def create_spreadsheet(name, name_worksheets, sum_rows, sum_cols):
     sh: Spreadsheet = gc.create(name, folder_id=folder_id)
-    sh_url: Spreadsheet = gc.open_by_url(sh.url)
+    sh_url: Spreadsheet = gc.open_by_key(sh.id)
     sh.share('kosheld89@gmail.com', perm_type='user', role='writer')
     # open_sh = gc.open_by_key(sh_url.url)
     ws = sh.get_worksheet(0)
     ws.update_title(name_worksheets)
     ws.resize(sum_rows, sum_cols)
-    return sh_url.url
+    return sh_url.id
 
 async def delete_spreadsheet(name):
     try:
@@ -56,9 +58,7 @@ def get_spreadsheet_id(spreadsheet_name):
 def get_ws_column(ws, sheet_id):
     sheet = gc.open_by_key(sheet_id)
     worksheet = sheet.worksheet(ws)
-    # Get all values from the worksheet
     all_values = worksheet.get_all_values()
-    # Extract data from the first column, skipping the first row
     first_column_data = [row[0] for row in all_values[1:]]
     return first_column_data
 
@@ -82,9 +82,13 @@ def get_cell(ws, sheet_id):
 
 def get_all_sheet(sheet_id, work_sheet):
     sheet = gc.open_by_key(sheet_id)
-    worksheet = sheet.worksheet(work_sheet)
-    all_values = worksheet.get_all_values()
-    return all_values
+    try:
+        worksheet = sheet.worksheet(work_sheet)
+        all_values = worksheet.get_all_values()
+        return all_values
+    except WorksheetNotFound as e:
+        logging.error(f"Worksheet '{work_sheet}' not found in spreadsheet '{sheet_id}': {e}")
+        return None
 
 def get_sheet_row_object(sheet_id, work_sheet, obj_list):
     print('worksheet', work_sheet)

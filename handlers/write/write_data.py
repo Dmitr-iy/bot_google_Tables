@@ -1,13 +1,13 @@
 from aiogram import Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
-from keyboards.inline_kb.write_kb import write_name_ws, write_ws_data, write_yes_no
+from keyboards.inline_kb.write_kb import write_name_ws, write_ws_data, write_yes_no, write_kb
 from utils.callbackdata import Write, WriteWorksheet, WriteData, WriteUpdate
-from utils.fun_gspread import get_spreadsheet_id, get_cell
+from utils.fun_gspread import get_spreadsheet_id, get_cell, get_all_sheet
 from utils.fun_write_gs import get_cell_data, get_col1_data, write_data_col1, write_range_data, examination_cell, \
-    get_cell_row1, write_all_datas
+    get_cell_row1, write_all_datas, write_new_col
 from utils.middleware import sheet_id_middleware
-from utils.state_class import StateWriteAll, StateWriteData
+from utils.state_class import StateWriteAll, StateWriteData, StateWriteNew
 
 router_write_data = Router()
 
@@ -24,21 +24,33 @@ async def call_write(call: CallbackQuery, callback_data: Write):
     await call.message.edit_reply_markup(reply_markup=None)
 
 @router_write_data.callback_query(WriteWorksheet.filter())
-async def call_write(call: CallbackQuery, callback_data: WriteWorksheet):
-    ws = callback_data.write_ws
+async def call_write(call: CallbackQuery, callback_data: WriteWorksheet, state: FSMContext):
+    work_sheet = callback_data.write_ws
     sheet_id = sheet_id_middleware.sheet_id
     spreadsheet_name = sheet_id_middleware.spreadsheet_name
-    sheet_id_middleware.work_sheet = ws
+    sheet_id_middleware.work_sheet = work_sheet
     print("data", sheet_id)
-    if ws == "back":
-        await call.message.delete()
-        # await call.message.edit_reply_markup(reply_markup=None)
-    else:
-        # write_view_row1 = get_ws_row(ws, sheet_id)
-        # print("write_view_row1", write_view_row1)
-        await call.message.answer(f"в таблице _'{spreadsheet_name}'_, листе _'{ws}'_, можно записать данные:\n\n",
-                                  reply_markup=write_ws_data(ws, sheet_id), parse_mode="Markdown")
+    if work_sheet == "back":
+        back = await call.message.answer("в какой таблице записать данные: ", reply_markup=write_kb())
         await call.message.edit_reply_markup(reply_markup=None)
+        return back
+    else:
+        result = get_all_sheet(sheet_id, work_sheet)
+        print('resultNone', result)
+        if result == [[]]:
+            await call.message.answer(f"в таблице _'{spreadsheet_name}'_, лист _'{work_sheet}'_, пустой.\n"
+                                      f"чтобы внести в нее данные, нужно заполнить шапку\n"
+                                      f"Сначала нужно заполнить 'шапку' таблицы.\n"
+                                      f"введи название столбцов через запятую, "
+                                      f"если название какого-то столбца не нужно - введи 0\n"
+                                      f"если не надо добавлять названия столбцов введи '-'", parse_mode="Markdown")
+            await call.message.edit_reply_markup(reply_markup=None)
+            await state.set_state(StateWriteNew.col)
+        else:
+            await call.message.answer(f"в таблице _'{spreadsheet_name}'_, листе _'{work_sheet}'_,"
+                                      f" можно записать данные:\n\n",
+                                      reply_markup=write_ws_data(work_sheet, sheet_id), parse_mode="Markdown")
+            await call.message.edit_reply_markup(reply_markup=None)
 
 @router_write_data.callback_query(WriteData.filter())
 async def call_write(call: CallbackQuery, callback_data: WriteData, state: FSMContext):
@@ -46,13 +58,16 @@ async def call_write(call: CallbackQuery, callback_data: WriteData, state: FSMCo
     sheet_id = sheet_id_middleware.sheet_id
     sheet_id_middleware.data_ = data_
     work_sheet = sheet_id_middleware.work_sheet
+    spreadsheet_name = sheet_id_middleware.spreadsheet_name
     if data_ == "all":
         cell_1 = get_cell_data(sheet_id, work_sheet)
         await call.message.answer(f"Введи _*'{cell_1}'*_", parse_mode="Markdown")
         await state.set_state(StateWriteAll.cell_1_all)
-    # await call.message.delete()
     elif data_ == "back":
-        pass
+        back = await call.message.answer(f"в таблице _'{spreadsheet_name}'_ выбери лист", parse_mode="Markdown",
+                                         reply_markup=write_name_ws(sheet_id))
+        await call.message.edit_reply_markup(reply_markup=None)
+        return back
     else:
         ws = work_sheet
         cell_ = get_cell(ws, sheet_id)
@@ -219,3 +234,55 @@ async def write_all_data(message, state: FSMContext):
     else:
         await message.answer(f"{message.from_user.full_name}\n\nДанные не записаны.")
         await state.clear()
+
+@router_write_data.message(StateWriteNew.col)
+async def write_new(message, state: FSMContext):
+    col = message.text
+    print("col: ", col)
+    await state.update_data(col=col)
+    data = await state.get_data()
+    col = data.get("col")
+    if col == '-':
+        data_col = ''
+        sheet_id_middleware.data_col = data_col
+        await message.answer(f"Введи названия строк, через запятую."
+                             f"если название какой либо строки не нужно - введи 0\n"
+                             f"если не надо добавлять названия строк введи '-'")
+        await state.set_state(StateWriteNew.row)
+    else:
+        column = col.split(",")
+        data_col = [cell if cell != '0' else '' for cell in column]
+        sheet_id_middleware.data_col = data_col
+        await message.answer(f"Введи названия строк, через запятую."
+                             f"если название какой либо строки не нужно - введи 0\n"
+                             f"если не надо добавлять названия строк введи '-'")
+        await state.set_state(StateWriteNew.row)
+
+@router_write_data.message(StateWriteNew.row)
+async def write_new_row(message, state: FSMContext):
+    row = message.text
+    print("row: ", row)
+    await state.update_data(row=row)
+    data = await state.get_data()
+    row = data.get("row")
+    data_col = sheet_id_middleware.data_col
+    sheet_id = sheet_id_middleware.sheet_id
+    work_sheet = sheet_id_middleware.work_sheet
+    if row == '-':
+        data_row = ''
+    else:
+        row = row.split(",")
+        data_row = [cell if cell != '0' else '' for cell in row]
+    if data_row == '' and data_col == '':
+        await message.answer(f"{message.from_user.full_name}\n\n"
+                             f"Ошибка! Введены не корректные данные. Начни заново.")
+        await state.clear()
+    else:
+        result = write_new_col(sheet_id, work_sheet, data_col, data_row)
+        print("result: ", result)
+        if result:
+            await message.answer(f"{message.from_user.full_name}\n\nДанные успешно записаны.")
+            await state.clear()
+        else:
+            await message.answer(f"{message.from_user.full_name}\n\nДанные не записаны.")
+            await state.clear()
