@@ -1,5 +1,4 @@
 import logging
-
 import gspread
 from google.oauth2.service_account import Credentials
 from gspread import Spreadsheet, Client, WorksheetNotFound
@@ -111,3 +110,32 @@ def get_sheet_column_object(sheet_id, work_sheet, obj_list):
     column_number_one = worksheet.col_values(1)
     column_object = column_number_one, column_number_obj
     return column_object
+
+def get_worksheet_list(name):
+    sheet = gc.open(name)
+    worksheets = sheet.worksheets()
+    worksheets = [worksheet.title for worksheet in worksheets]
+    return worksheets
+
+def delete_worksheets(name_spreadsheet, name):
+    try:
+        sheet = gc.open(name_spreadsheet)
+        worksheet = sheet.worksheet(name)
+        sheet.del_worksheet(worksheet)
+        return True
+    except gspread.SpreadsheetNotFound:
+        return False
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return False
+
+def create_worksheet(table, name_spreadsheet, sum_rows, sum_cols):
+    try:
+        sheet = gc.open(table)
+        sheet.add_worksheet(title=name_spreadsheet, rows=sum_rows, cols=sum_cols)
+        return True
+    except gspread.SpreadsheetNotFound:
+        return False
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return False

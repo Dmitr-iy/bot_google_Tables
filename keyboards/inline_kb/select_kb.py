@@ -1,12 +1,11 @@
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from utils.callbackdata import Select, SelectDelete, SelectSheet
-from utils.fun_gspread import get_spreadsheet_names
+from utils.callbackdata import Select, SelectDelete, SelectSheet, SelectDel, SelectDeletes
+from utils.fun_gspread import get_spreadsheet_names, get_worksheet_list
 from utils.func_google import get_sheets_names
 
 
 def select_kb():
     builder = InlineKeyboardBuilder()
-
     names = get_spreadsheet_names()
     for name in names:
         builder.button(
@@ -32,17 +31,46 @@ def select_ws_view(sheet_id):
     builder.adjust(2)
     return builder.as_markup()
 
-def select_delete_kb():
+def deletes():
     builder = InlineKeyboardBuilder()
+    builder.button(
+        text="удалить таблицу",
+        callback_data=SelectDelete(select="table").pack()
+    )
+    builder.button(
+        text='удалить лист',
+        callback_data=SelectDelete(select="sheet").pack()
+    )
+    builder.adjust(2)
+    return builder.as_markup()
 
+def delete_worksheet():
+    builder = InlineKeyboardBuilder()
     names_spreadsheet = get_spreadsheet_names()
     for name in names_spreadsheet:
-
         builder.button(
             text=name,
-            callback_data=SelectDelete(select_del=name).pack()
+            callback_data=SelectDel(select_sheet=name).pack()
         )
-
+    builder.button(
+        text='назад',
+        callback_data=SelectDel(select_sheet="back").pack()
+    )
     builder.adjust(2, 2)
+    return builder.as_markup()
 
+def select_del(name):
+    builder = InlineKeyboardBuilder()
+    title = get_worksheet_list(name)
+    for name in title:
+        builder.button(
+            text=name,
+            callback_data=SelectDeletes(select_del=name).pack()
+        )
+    builder.button(
+        text="назад",
+        callback_data=SelectDeletes(select_del="back").pack()
+    )
+
+    builder.adjust(2)
     return builder.as_markup()

@@ -14,6 +14,12 @@ class SelectSheet(CallbackData, prefix='select_sheet'):
     sheet_id: str
 
 class SelectDelete(CallbackData, prefix='select_del'):
+    select: str
+
+class SelectDel(CallbackData, prefix='select__del'):
+    select_sheet: str
+
+class SelectDeletes(CallbackData, prefix='select_deletes'):
     select_del: str
 
 class ViewObject(CallbackData, prefix='views'):
@@ -37,32 +43,14 @@ class WriteData(CallbackData, prefix='write_data'):
 class WriteUpdate(CallbackData, prefix='write_'):
     write_: str
 
-class WritePrice2(CallbackData, prefix='write_price'):
-    write_price2: str
-
-class WriteConsumables(CallbackData, prefix='write_consumables'):
-    write_consumables: str
-
-class WriteConsumables2(CallbackData, prefix='write_consumables'):
-    write_consumables2: str
-
-class WriteTool(CallbackData, prefix='write_tool'):
-    write_tool: str
-
-class WriteTool2(CallbackData, prefix='write_tool'):
-    write_tool2: str
-
-class WriteCar(CallbackData, prefix='write_car'):
-    write_car: str
-    write_car2: str
-
-class WritePetrol(CallbackData, prefix='write_petrol_obj'):
-    write_petrol_obj: str
-    write_petrol_obj2: str
-
-class WriteSalary(CallbackData, prefix='write_salary'):
-    write_salary: str
-    write_salary2: str
-
 class WriteAll(CallbackData, prefix='write_all'):
     write_alls: str
+
+class KbNewFil(CallbackData, prefix="create_new_fil"):
+    select_tabl: str
+
+class KbNewFile(CallbackData, prefix="create_new_file"):
+    select_table: str
+
+class KbNewFiles(CallbackData, prefix="create_new_files"):
+    select_tables: str

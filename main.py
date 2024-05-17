@@ -1,27 +1,20 @@
 import asyncio
 from aiogram import Bot, Dispatcher
 import logging
-
 # from bot.handlers.handler_commands import router_commands
 # from bot.handlers.handler_msg_save import router_save_msg
 # from bot.handlers.handlers_save_object import router_save
 # from bot.handlers.handlers_save_workers import router_save_workers
 # from bot.utils.commands import set_commands
 from data.config import config_settings
-from handlers.create.handler_start import router_start_created
 from handlers.create.new_table import router_new_table
 from handlers.delete_data import router_delete
 from handlers.start import router_commands
 from handlers.view_data import router_view_data
-from handlers.write.car import router_writer_car
-from handlers.write.consumables import router_writer_consumables
 from handlers.write.date_end import router_writer_date_end
 from handlers.write.date_start import router_writer_date_start
 from handlers.write.name_obj import router_write_name
 # from handlers.write.object import router_write_object
-from handlers.write.petrol_obj import router_writer_petrol
-from handlers.write.repair_tools import router_writer_repair_tools
-from handlers.write.salary import router_writer_salary
 from handlers.write.write_data import router_write_data
 from utils.commands import set_commands
 from utils.middleware import sheet_id_middleware, ChatActionMiddleware
@@ -61,8 +54,6 @@ async def start():
     try:
         dp.include_routers(router_commands, router_view_data, router_write_data,
                            router_write_name, router_writer_date_start, router_writer_date_end,
-                           router_writer_consumables, router_writer_repair_tools, router_writer_car,
-                           router_writer_petrol, router_writer_salary, router_start_created,
                            router_new_table, router_delete)
         # dp.include_router(router_write_all)
 

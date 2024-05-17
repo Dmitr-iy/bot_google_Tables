@@ -1,12 +1,35 @@
 from aiogram import Router, types, flags
 from aiogram.fsm.context import FSMContext
-from keyboards.inline_kb.kb_create.kb_new_file import create_file_y_n
-from utils.callbackCreate import KbNewFile
-from utils.fun_gspread import create_spreadsheet, examination_name
+from keyboards.inline_kb.kb_create.kb_new_file import create_file_y_n, select_table
+from utils.callbackdata import KbNewFile, KbNewFil, KbNewFiles
+from utils.fun_gspread import create_spreadsheet, examination_name, create_worksheet, get_spreadsheet_id, \
+    get_worksheet_list
 from utils.middleware import sheet_id_middleware
 from utils.state_class import StateCreate, StateWriteNew
 
+
 router_new_table = Router()
+
+@router_new_table.callback_query(KbNewFile.filter())
+async def get_kb_start(call: types.CallbackQuery, callback_data: KbNewFile, state: FSMContext):
+    select = callback_data.select_table
+    sheet_id_middleware.select = select
+    if select == "create":
+        await call.message.answer(f"{call.from_user.full_name}\n\nвведи название таблицы")
+        await state.set_state(StateCreate.name)
+    else:
+        if select == 'create_sheet':
+            await call.message.answer(f"{call.from_user.full_name}\n\nвыбери таблицу, в которую добавить новый лист",
+                                      reply_markup=select_table())
+    await call.message.edit_reply_markup(reply_markup=None)
+
+@router_new_table.callback_query(KbNewFil.filter())
+async def get_kb_new_file(call: types.CallbackQuery, callback_data: KbNewFil, state: FSMContext):
+    select_ = callback_data.select_tabl
+    sheet_id_middleware.select_ = select_
+    await call.message.answer(f"{call.from_user.full_name}\n\nвведи название листа")
+    await state.set_state(StateCreate.name_worksheets)
+    await call.message.edit_reply_markup(reply_markup=None)
 
 @router_new_table.message(StateCreate.name)
 async def new_table(message: types.Message, state: FSMContext):
@@ -25,11 +48,23 @@ async def name_worksheet(message: types.Message, state: FSMContext):
     name_ws = message.text
     await state.update_data(name_ws=name_ws)
     sheet_id_middleware.work_sheet = name_ws
+    select = sheet_id_middleware.select
+    table = sheet_id_middleware.select_
     data = await state.get_data()
     name = data.get("name")
     name_worksheets = data.get("name_ws")
-    await message.answer(f"В таблицу {name} добавлен лист {name_worksheets}!\n\n"
-                         f"какое кол-во строк в листе: {name_worksheets}")
+    if select == 'create':
+        await message.answer(f"В таблицу {name} добавлен лист {name_worksheets}!\n\n"
+                             f"какое кол-во строк в листе: {name_worksheets}")
+    else:
+        result = get_worksheet_list(name=table)
+        if result:
+            if name_worksheets in result:
+                await message.answer(f"Таблица {table} уже содержит лист {name_worksheets}\n\nвведи другое название")
+                return
+            else:
+                await message.answer(f"В таблицу {table} добавлен лист {name_worksheets}\n\n"
+                                     f"какое кол-во строк в листе: {name_worksheets}")
     await state.set_state(StateCreate.sum_rows)
 
 @router_new_table.message(StateCreate.sum_rows)
@@ -51,22 +86,39 @@ async def num_cols(message: types.Message, state: FSMContext):
     name_worksheets = data.get("name_ws")
     sum_rows = data.get("sum_rows")
     sum_cols = data.get("sum_cols")
-    await message.answer('идет создание таблицы...', sleep=2)
-    url = await (create_spreadsheet(name, name_worksheets, sum_rows, sum_cols))
-    print('url', url)
-    sheet_id_middleware.sheet_id = url
-    print('sheet_id', sheet_id_middleware.sheet_id)
-    await message.answer(f"Таблица {name} создана, в нее добавлен лист {name_worksheets}\n\n"
-                         f"кол-во строк в листе: {sum_rows}\n\n"
-                         f"кол-во столбцов в листе: {sum_cols}\n\n"
-                         f"<a href='https://docs.google.com/spreadsheets/d/{url}/edit#gid=0'>Ссылка на таблицу</a>\n\n"
-                         f"данные будем сейчас вносить в таблицу?",
-                         reply_markup=create_file_y_n())
+    select = sheet_id_middleware.select
+    table = sheet_id_middleware.select_
+    if select == 'create':
+        await message.answer('идет создание таблицы...', sleep=2)
+        url = await (create_spreadsheet(name, name_worksheets, sum_rows, sum_cols))
+        print('url', url)
+        sheet_id_middleware.sheet_id = url
+        print('sheet_id', sheet_id_middleware.sheet_id)
+        await message.answer(f"Таблица {name} создана, в нее добавлен лист {name_worksheets}\n\n"
+                             f"кол-во строк в листе: {sum_rows}\n\n"
+                             f"кол-во столбцов в листе: {sum_cols}\n\n"
+                             f"<a href='https://docs.google.com/spreadsheets/d/{url}/edit#gid=0'>Ссылка на таблицу</a>"
+                             f"\n\n"
+                             f"данные будем сейчас вносить в таблицу?",
+                             reply_markup=create_file_y_n())
+    else:
+        await message.answer('идет создание листа...', sleep=2)
+        create = create_worksheet(table, name_worksheets, sum_rows, sum_cols)
+        print('create', create)
+        if create:
+            sheet_id = get_spreadsheet_id(spreadsheet_name=table)
+            print('sheet_id', sheet_id)
+            sheet_id_middleware.sheet_id = sheet_id
+            await message.answer(f"В таблицу {table} добавлен лист {name_worksheets}\n\n"
+                                 f"кол-во строк в листе: {sum_rows}\n\n"
+                                 f"кол-во столбцов в листе: {sum_cols}\n\n"
+                                 f"данные будем сейчас вносить в таблицу?",
+                                 reply_markup=create_file_y_n())
     await state.set_state(StateCreate.yes_no_news)
 
-@router_new_table.callback_query(KbNewFile.filter(), StateCreate.yes_no_news)
-async def yes_no_news(call: types.CallbackQuery, callback_data: KbNewFile, state: FSMContext):
-    callbacks = callback_data.yes_no_new
+@router_new_table.callback_query(KbNewFiles.filter(), StateCreate.yes_no_news)
+async def yes_no_news(call: types.CallbackQuery, callback_data: KbNewFiles, state: FSMContext):
+    callbacks = callback_data.select_tables
     if callbacks == "yes":
         await call.message.answer(f"Сначала нужно заполнить 'шапку' таблицы.\n"
                                   f"введи название столбцов через запятую, "
@@ -76,3 +128,4 @@ async def yes_no_news(call: types.CallbackQuery, callback_data: KbNewFile, state
     else:
         await call.message.answer(f"когда понадобится добавить данные, в меню выбери команду 'Записать'")
         await state.clear()
+    await call.message.edit_reply_markup(reply_markup=None)
