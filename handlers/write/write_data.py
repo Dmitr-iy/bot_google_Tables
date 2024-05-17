@@ -3,9 +3,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from keyboards.inline_kb.write_kb import write_name_ws, write_ws_data, write_yes_no, write_kb
 from utils.callbackdata import Write, WriteWorksheet, WriteData, WriteUpdate
-from utils.fun_gspread import get_spreadsheet_id, get_cell, get_all_sheet
+from utils.fun_gspread import get_spreadsheet_id, get_cell, get_all_sheet, get_ws_row
 from utils.fun_write_gs import get_cell_data, get_col1_data, write_data_col1, write_range_data, examination_cell, \
-    get_cell_row1, write_all_datas, write_new_col
+    get_cell_row1, write_all_datas, write_new_col, add_column, add_column_name
 from utils.middleware import sheet_id_middleware
 from utils.state_class import StateWriteAll, StateWriteData, StateWriteNew
 
@@ -68,6 +68,9 @@ async def call_write(call: CallbackQuery, callback_data: WriteData, state: FSMCo
                                          reply_markup=write_name_ws(sheet_id))
         await call.message.edit_reply_markup(reply_markup=None)
         return back
+    elif data_ == 'add':
+        await call.message.answer('введи количество столбцов и через запятую название столбцов')
+        await state.set_state(StateWriteNew.column)
     else:
         ws = work_sheet
         cell_ = get_cell(ws, sheet_id)
@@ -87,6 +90,50 @@ async def call_write(call: CallbackQuery, callback_data: WriteData, state: FSMCo
                                       f" вот что есть:\n{result_text}",
                                       parse_mode="Markdown")
             await state.set_state(StateWriteData.cell_range_name_obj)
+
+@router_write_data.message(StateWriteNew.column)
+async def write_new_column(message, state: FSMContext):
+    column_data = message.text
+    await state.update_data(column_data=column_data)
+
+    try:
+        # Разделяем введенные данные на количество столбцов и их названия
+        columns_info = column_data.split(',')
+        num_columns = int(columns_info[0].strip())
+        column_names = [name.strip() for name in columns_info[1:]]
+
+        # Проверяем, что количество названий соответствует количеству столбцов
+        if len(column_names) != num_columns:
+            await message.answer(f"{message.from_user.full_name}\n\nКоличество названий столбцов должно "
+                                 f"соответствовать количеству столбцов.")
+            return
+
+        sheet_id = sheet_id_middleware.sheet_id
+        work_sheet = sheet_id_middleware.work_sheet
+        result = get_ws_row(ws=work_sheet, sheet_id=sheet_id)
+
+        for name in column_names:
+            if name in result:
+                await message.answer(f"{message.from_user.full_name}\n\nНазвание '{name}' уже существует. "
+                                     f"Названия должны быть уникальными. Введи заново количество столбцов и "
+                                     f"другие названия.")
+                return
+
+        adding = add_column(sheet_id, work_sheet, num_columns)
+
+        if adding:
+            adding_names = add_column_name(sheet_id, work_sheet, num_columns, column_names)
+            if adding_names:
+                await message.answer(f"{message.from_user.full_name}\n\nСтолбцы успешно добавлены и названы.")
+            else:
+                await message.answer(f"{message.from_user.full_name}\n\nОшибка при добавлении названий столбцов.")
+        else:
+            await message.answer(f"{message.from_user.full_name}\n\nОшибка при добавлении столбцов.")
+
+        await state.clear()
+    except Exception as e:
+        await message.answer(f"{message.from_user.full_name}\n\nПроизошла ошибка: {str(e)}")
+        await state.clear()
 
 @router_write_data.message(StateWriteData.cell_1)
 async def write_data(message, state: FSMContext):

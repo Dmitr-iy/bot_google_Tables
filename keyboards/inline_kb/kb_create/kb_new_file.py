@@ -23,16 +23,18 @@ def create_file_y_n():
 
 def select_table():
     builder = InlineKeyboardBuilder()
-
     names_spreadsheet = get_spreadsheet_names()
     for name in names_spreadsheet:
         builder.button(
             text=name,
             callback_data=KbNewFil(select_tabl=name).pack()
         )
+    builder.button(
+        text="назад",
+        callback_data=KbNewFil(select_tabl="back").pack()
+    )
 
     builder.adjust(2, 2)
-
     return builder.as_markup()
 
 def kb_start():

@@ -50,6 +50,10 @@ def write_ws_data(ws, sheet_id):
         text="все строки",
         callback_data=WriteData(write_data="all").pack()
     )
+    builder.button(
+        text="добавить столбец",
+        callback_data=WriteData(write_data="add").pack()
+    )
 
     builder.button(
         text="назад",

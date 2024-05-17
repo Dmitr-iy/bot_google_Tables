@@ -87,3 +87,4 @@ class StateCreate(StatesGroup):
 class StateWriteNew(StatesGroup):
     col = State()
     row = State()
+    column = State()

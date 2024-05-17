@@ -1,6 +1,6 @@
 from aiogram import Router, types, flags
 from aiogram.fsm.context import FSMContext
-from keyboards.inline_kb.kb_create.kb_new_file import create_file_y_n, select_table
+from keyboards.inline_kb.kb_create.kb_new_file import create_file_y_n, select_table, kb_start
 from utils.callbackdata import KbNewFile, KbNewFil, KbNewFiles
 from utils.fun_gspread import create_spreadsheet, examination_name, create_worksheet, get_spreadsheet_id, \
     get_worksheet_list
@@ -27,8 +27,13 @@ async def get_kb_start(call: types.CallbackQuery, callback_data: KbNewFile, stat
 async def get_kb_new_file(call: types.CallbackQuery, callback_data: KbNewFil, state: FSMContext):
     select_ = callback_data.select_tabl
     sheet_id_middleware.select_ = select_
-    await call.message.answer(f"{call.from_user.full_name}\n\nвведи название листа")
-    await state.set_state(StateCreate.name_worksheets)
+    if select_ == "back":
+        await call.answer("создать: ", reply_markup=kb_start())
+        await call.message.edit_reply_markup(reply_markup=None)
+        return
+    else:
+        await call.message.answer(f"{call.from_user.full_name}\n\nвведи название листа")
+        await state.set_state(StateCreate.name_worksheets)
     await call.message.edit_reply_markup(reply_markup=None)
 
 @router_new_table.message(StateCreate.name)
