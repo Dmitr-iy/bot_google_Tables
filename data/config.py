@@ -12,14 +12,12 @@ class Settings(BaseSettings):
     db_host: str
     db_port: str
     admin_id: int
+    USER_ID: int
     allowed_chat_ids: str
-    table_ids: str
-    range_ids: str
-    sheet_id: SecretStr
-    sheet_id2: SecretStr
     folder_id: SecretStr
     email_admin: str
     email_user: str
+
 
     model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8')
 

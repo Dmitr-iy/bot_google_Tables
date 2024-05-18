@@ -88,3 +88,6 @@ class StateWriteNew(StatesGroup):
     col = State()
     row = State()
     column = State()
+
+class StateMessage(StatesGroup):
+    message_text = State()

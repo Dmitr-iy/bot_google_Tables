@@ -2,6 +2,7 @@ import asyncio
 from aiogram import Bot, Dispatcher
 import logging
 from data.config import config_settings
+from handlers.messag import router_message
 from handlers.new_table import router_new_table
 from handlers.delete_data import router_delete
 from handlers.start import router_commands
@@ -29,7 +30,8 @@ async def start():
     dp.shutdown.register(stop_bot)
 
     try:
-        dp.include_routers(router_commands, router_view_data, router_write_data, router_new_table, router_delete)
+        dp.include_routers(router_commands, router_view_data, router_write_data, router_new_table, router_delete,
+                           router_message)
 
         await bot.delete_webhook(drop_pending_updates=True)
         await dp.start_polling(bot)

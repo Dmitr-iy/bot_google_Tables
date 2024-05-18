@@ -4,11 +4,10 @@ import os
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state
 from aiogram.types import Message, ReplyKeyboardRemove
-
 from keyboards.inline_kb.kb_new_file import kb_start
 from keyboards.inline_kb.select_kb import select_kb, deletes
 from keyboards.inline_kb.write_kb import write_kb
-
+from utils.state_class import StateMessage
 
 router_commands = Router()
 
@@ -61,5 +60,6 @@ async def cmd_cancel(message: Message, state: FSMContext):
     )
 
 @router_commands.message(Command(commands=["message"]))
-async def get_message(message: Message):
-    await message.answer("Сообщение")
+async def get_message(message: Message, state: FSMContext):
+    await message.answer(f"введи Сообщение")
+    await state.set_state(StateMessage.message_text)
