@@ -1,7 +1,7 @@
 from aiogram import Router
 from aiogram.types import CallbackQuery
 from aiogram import flags
-from keyboards.inline_kb.kb_view.kb_view_sheet_data import view_sheet_column, select_row_colm, view_sheet_row
+from keyboards.inline_kb.kb_view_sheet_data import view_sheet_column, select_row_colm, view_sheet_row
 from keyboards.inline_kb.select_kb import select_ws_view
 from utils.callbackdata import Select, ViewObject, SelectSheet, ViewSelect, ViewRow
 from utils.fun_gspread import get_spreadsheet_id, get_cell, get_sheet_row_object, get_sheet_column_object

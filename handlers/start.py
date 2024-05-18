@@ -5,7 +5,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state
 from aiogram.types import Message, ReplyKeyboardRemove
 
-from keyboards.inline_kb.kb_create.kb_new_file import kb_start
+from keyboards.inline_kb.kb_new_file import kb_start
 from keyboards.inline_kb.select_kb import select_kb, deletes
 from keyboards.inline_kb.write_kb import write_kb
 

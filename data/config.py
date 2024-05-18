@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     sheet_id: SecretStr
     sheet_id2: SecretStr
     folder_id: SecretStr
+    email_admin: str
+    email_user: str
 
     model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8')
 

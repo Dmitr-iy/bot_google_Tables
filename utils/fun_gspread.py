@@ -3,7 +3,6 @@ import os
 import gspread
 from google.oauth2.service_account import Credentials
 from gspread import Spreadsheet, Client, WorksheetNotFound
-# from utils.func_google import SERVICE_ACCOUNT_FILE, SCOPES
 from data.config import config_settings
 
 
@@ -41,7 +40,8 @@ async def examination_name(name):
 async def create_spreadsheet(name, name_worksheets, sum_rows, sum_cols):
     sh: Spreadsheet = gc.create(name, folder_id=folder_id)
     sh_url: Spreadsheet = gc.open_by_key(sh.id)
-    sh.share('kosheld89@gmail.com', perm_type='user', role='writer')
+    sh.share(f'{config_settings.email_admin}', perm_type='user', role='writer')
+    sh.share(f'{config_settings.email_user}', perm_type='user', role='writer')
     ws = sh.get_worksheet(0)
     ws.update_title(name_worksheets)
     ws.resize(sum_rows, sum_cols)

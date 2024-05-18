@@ -2,11 +2,11 @@ import asyncio
 from aiogram import Bot, Dispatcher
 import logging
 from data.config import config_settings
-from handlers.create.new_table import router_new_table
+from handlers.new_table import router_new_table
 from handlers.delete_data import router_delete
 from handlers.start import router_commands
 from handlers.view_data import router_view_data
-from handlers.write.write_data import router_write_data
+from handlers.write_data import router_write_data
 from utils.commands import set_commands
 from utils.middleware import sheet_id_middleware, ChatActionMiddleware
 

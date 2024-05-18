@@ -1,6 +1,6 @@
 from aiogram import Router, types, flags
 from aiogram.fsm.context import FSMContext
-from keyboards.inline_kb.kb_create.kb_new_file import create_file_y_n, select_table, kb_start
+from keyboards.inline_kb.kb_new_file import create_file_y_n, select_table, kb_start
 from utils.callbackdata import KbNewFile, KbNewFil, KbNewFiles
 from utils.fun_gspread import create_spreadsheet, examination_name, create_worksheet, get_spreadsheet_id, \
     get_worksheet_list
@@ -54,7 +54,6 @@ async def name_worksheet(message: types.Message, state: FSMContext):
     await state.update_data(name_ws=name_ws)
     sheet_id_middleware.work_sheet = name_ws
     select = sheet_id_middleware.select
-    table = sheet_id_middleware.select_
     data = await state.get_data()
     name = data.get("name")
     name_worksheets = data.get("name_ws")
@@ -62,6 +61,7 @@ async def name_worksheet(message: types.Message, state: FSMContext):
         await message.answer(f"В таблицу {name} добавлен лист {name_worksheets}!\n\n"
                              f"какое кол-во строк в листе: {name_worksheets}")
     else:
+        table = sheet_id_middleware.select_
         result = get_worksheet_list(name=table)
         if result:
             if name_worksheets in result:
@@ -92,7 +92,6 @@ async def num_cols(message: types.Message, state: FSMContext):
     sum_rows = data.get("sum_rows")
     sum_cols = data.get("sum_cols")
     select = sheet_id_middleware.select
-    table = sheet_id_middleware.select_
     if select == 'create':
         await message.answer('идет создание таблицы...', sleep=2)
         url = await (create_spreadsheet(name, name_worksheets, sum_rows, sum_cols))
@@ -105,8 +104,9 @@ async def num_cols(message: types.Message, state: FSMContext):
                              f"<a href='https://docs.google.com/spreadsheets/d/{url}/edit#gid=0'>Ссылка на таблицу</a>"
                              f"\n\n"
                              f"данные будем сейчас вносить в таблицу?",
-                             reply_markup=create_file_y_n())
+                             reply_markup=create_file_y_n(), parse_mode="HTML")
     else:
+        table = sheet_id_middleware.select_
         await message.answer('идет создание листа...', sleep=2)
         create = create_worksheet(table, name_worksheets, sum_rows, sum_cols)
         print('create', create)

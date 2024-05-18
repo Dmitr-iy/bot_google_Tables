@@ -1,7 +1,6 @@
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from utils.callbackdata import Select, SelectDelete, SelectSheet, SelectDel, SelectDeletes
-from utils.fun_gspread import get_spreadsheet_names, get_worksheet_list
-from utils.func_google import get_sheets_names
+from utils.fun_gspread import get_spreadsheet_names, get_worksheet_list, get_sheets_names
 
 
 def select_kb():
