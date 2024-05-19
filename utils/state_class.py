@@ -91,3 +91,9 @@ class StateWriteNew(StatesGroup):
 
 class StateMessage(StatesGroup):
     message_text = State()
+
+class StatSupport(StatesGroup):
+    message_text = State()
+
+class StateAdmin(StatesGroup):
+    message_text = State()

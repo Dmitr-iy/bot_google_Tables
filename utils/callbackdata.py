@@ -54,3 +54,6 @@ class KbNewFile(CallbackData, prefix="create_new_file"):
 
 class KbNewFiles(CallbackData, prefix="create_new_files"):
     select_tables: str
+
+class Admin(CallbackData, prefix="admin"):
+    admin: str

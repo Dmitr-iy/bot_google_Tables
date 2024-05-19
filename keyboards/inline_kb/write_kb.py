@@ -1,5 +1,5 @@
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from utils.callbackdata import Write, WriteWorksheet, WriteData, WriteUpdate
+from utils.callbackdata import Write, WriteWorksheet, WriteData, WriteUpdate, Admin
 from utils.fun_gspread import get_spreadsheet_names, get_sheets_names, get_ws_row
 
 
@@ -77,4 +77,17 @@ def write_yes_no():
 
     builder.adjust(1)
 
+    return builder.as_markup()
+
+def kb_admin():
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text="clear files",
+        callback_data=Admin(admin="clear").pack()
+    )
+    builder.button(
+        text="delete messages from users",
+        callback_data=Admin(admin="delete").pack()
+    )
+    builder.adjust(1)
     return builder.as_markup()

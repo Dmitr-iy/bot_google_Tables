@@ -1,5 +1,8 @@
 import asyncio
 from aiogram import types
+import os
+import csv
+from datetime import datetime
 from aiogram.fsm.context import FSMContext
 from utils.fun_gspread import get_all_sheet
 from utils.middleware import sheet_id_middleware
@@ -59,3 +62,54 @@ async def responses(message: types.Message, state: FSMContext, result, states):
     response += "\nПожалуйста, выбери нужный объект."
     await message.answer(response)
     await state.set_state(states)
+
+# support
+
+FOLDER_NAME = 'support'
+FILE_NAME = 'messages.csv'
+FILE_PATH = os.path.join(FOLDER_NAME, FILE_NAME)
+
+def ensure_folder_exists():
+    if not os.path.exists(FOLDER_NAME):
+        os.makedirs(FOLDER_NAME)
+
+def save_message(user_id, user_name, message):
+    ensure_folder_exists()
+    with open(FILE_PATH, mode='a', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        writer.writerow([user_id, user_name, message, datetime.now().isoformat()])
+    return True
+
+async def get_user_name(message, user_id, allowed_chat_ids):
+    recipient_id = allowed_chat_ids[1] if user_id == allowed_chat_ids[0] else allowed_chat_ids[0]
+    member = await message.bot.get_chat_member(chat_id=recipient_id, user_id=recipient_id)
+    recipient_name = member.user.first_name
+    return recipient_name
+
+def get_messages():
+    messages = []
+    ensure_folder_exists()
+    if os.path.exists(FILE_PATH):
+        with open(FILE_PATH, mode='r', newline='', encoding='utf-8') as file:
+            reader = csv.reader(file)
+            messages = list(reader)
+    return messages
+
+def clear_messages():
+    # ensure_folder_exists()
+    if os.path.exists(FILE_PATH):
+        with open(FILE_PATH, mode='w', newline='', encoding='utf-8') as file:
+            pass
+        return True
+
+def delete_messages(user_id):
+    # ensure_folder_exists()
+    if os.path.exists(FILE_PATH):
+        messages = get_messages()
+        print('messages', messages)
+        if user_id:
+            messages = [msg for msg in messages if msg[1] != user_id]
+        with open(FILE_PATH, mode='w', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            writer.writerows(messages)
+            return True
