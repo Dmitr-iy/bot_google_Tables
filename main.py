@@ -1,6 +1,10 @@
 import asyncio
 from aiogram import Bot, Dispatcher
 import logging
+
+from aiohttp import BasicAuth
+from aiogram.client.session.aiohttp import AiohttpSession
+
 from data.config import config_settings
 from handlers.messag import router_message
 from handlers.new_table import router_new_table
@@ -20,8 +24,10 @@ async def stop_bot(bot: Bot):
     await bot.send_message(config_settings.admin_id, "Бот остановлен")
 
 async def start():
+    auth = BasicAuth(login="gvncnbbf", password="k0u8o62jgu6z")
+    session = AiohttpSession(proxy=("http://45.94.47.66:8110", auth))
 
-    bot = Bot(token=config_settings.bot_token.get_secret_value())
+    bot = Bot(token=config_settings.bot_token.get_secret_value(), session=session)
 
     dp = Dispatcher()
     dp.update.middleware(sheet_id_middleware)
