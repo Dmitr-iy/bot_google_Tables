@@ -6,18 +6,13 @@ load_dotenv()
 
 class Settings(BaseSettings):
     bot_token: SecretStr
-    db_user: str
-    db_password: SecretStr
-    db_name: str
-    db_host: str
-    db_port: str
     admin_id: int
     USER_ID: int
     allowed_chat_ids: str
     folder_id: SecretStr
     email_admin: str
     email_user: str
-
+    proxy: str
 
     model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8')
 
